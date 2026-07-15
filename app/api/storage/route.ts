@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, readdir, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 export const runtime = "nodejs";
@@ -21,4 +21,12 @@ export async function POST(request:NextRequest) {
   const dir=path.join(root,type); await mkdir(dir,{recursive:true});
   await writeFile(path.join(dir,`${name}.json`),JSON.stringify({name,content:data.content,savedAt:new Date().toISOString()},null,2),"utf8");
   return NextResponse.json({ok:true,name});
+}
+
+export async function DELETE(request:NextRequest) {
+  const type=safe(request.nextUrl.searchParams.get("type")||"");
+  const name=safe(request.nextUrl.searchParams.get("name")||"");
+  if(!type||!name)return NextResponse.json({error:"type and name required"},{status:400});
+  try{await unlink(path.join(root,type,`${name}.json`));return NextResponse.json({ok:true})}
+  catch{return NextResponse.json({ok:true})}
 }
